@@ -1,19 +1,20 @@
-FROM java:7
+FROM openjdk:8
 MAINTAINER ome-devel@lists.openmicroscopy.org.uk
 
-RUN apt-get install -y curl
-RUN curl -o bftools.zip $(curl -Ls -o /dev/null -w %{url_effective} http://downloads.openmicroscopy.org/latest/bio-formats)/artifacts/bftools.zip
+ARG VERSION=5.8.2
 
-RUN apt-get install -y unzip
-RUN unzip -d /opt bftools.zip && rm bftools.zip
-RUN chmod a+rx /opt/bftools/*
+RUN apt-get update && apt-get install -y curl unzip \
+ && curl -A "Docker" -o bftools.zip https://downloads.openmicroscopy.org/bio-formats/$VERSION/artifacts/bftools.zip \
+ && unzip -d /opt bftools.zip && rm bftools.zip \
+ && chmod a+rx /opt/bftools/* \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m bf
 
+ENV PATH="${PATH}:/opt/bftools"
 USER bf
-RUN echo 'export PATH=/opt/bftools:$PATH' >> /home/bf/.bashrc
 
 ENV HOME /home/bf
-WORKDIR /home/bf
+WORKDIR /opt/bftools
 
-CMD bash
+ENTRYPOINT ["bash"]
